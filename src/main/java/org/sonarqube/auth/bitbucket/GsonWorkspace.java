@@ -19,25 +19,18 @@
  */
 package org.sonarqube.auth.bitbucket;
 
-import org.junit.Test;
-import org.sonar.api.Plugin;
-import org.sonar.api.SonarQubeSide;
-import org.sonar.api.internal.PluginContextImpl;
-import org.sonar.api.internal.SonarRuntimeImpl;
-import org.sonar.api.utils.Version;
+import com.google.gson.annotations.SerializedName;
 
-import static org.assertj.core.api.Assertions.assertThat;
+/**
+ * Lite representation of team https://api.bitbucket.org/2.0/workspaces
+ */
+public class GsonWorkspace {
 
-public class AuthBitbucketPluginTest {
-  private Plugin.Context context = new PluginContextImpl.Builder()
-    .setSonarRuntime(SonarRuntimeImpl.forSonarQube(Version.create(6, 7), SonarQubeSide.SERVER))
-    .build();
-  private AuthBitbucketPlugin underTest = new AuthBitbucketPlugin();
+  @SerializedName("slug")
+  private String workSpace;
 
-  @Test
-  public void test_extensions() {
-    underTest.define(context);
-    assertThat(context.getExtensions()).hasSize(12);
+  public String getWorkSpace() {
+    return workSpace;
   }
 
 }

@@ -107,6 +107,7 @@ public class BitbucketIdentityProvider implements OAuth2IdentityProvider {
     GsonEmails gsonEmails = requestEmails(scribe, accessToken);
 
     checkTeamRestriction(scribe, accessToken, gsonUser);
+    checkWorkspaceRestriction(scribe, accessToken, gsonUser);
 
     UserIdentity userIdentity = userIdentityFactory.create(gsonUser, gsonEmails);
     context.authenticate(userIdentity);
@@ -146,7 +147,15 @@ public class BitbucketIdentityProvider implements OAuth2IdentityProvider {
       }
     }
   }
-
+  private void checkWorkspaceRestriction(OAuthService scribe, Token accessToken, GsonUser user) {
+    String[] workspacesRestriction = settings.workspaceRestriction();
+    if (workspacesRestriction != null && workspacesRestriction.length > 0) {
+      GsonWorkspaces userWorkspaces = requestWorkspaces(scribe, accessToken);
+      if (userWorkspaces == null || userWorkspaces.getWorkspaces() == null || userWorkspaces.getWorkspaces().stream().noneMatch(t -> asList(workspacesRestriction).contains(t.getWorkSpace()))) {
+        throw new UnauthorizedException(format("User %s is not part of restricted workspaces: %s", user.getUsername(), userWorkspaces.getWorkspaces()));
+      }
+    }
+  }
   @CheckForNull
   private GsonTeams requestTeams(OAuthService scribe, Token accessToken) {
     OAuthRequest userRequest = new OAuthRequest(Verb.GET, settings.apiURL() + "2.0/teams?role=member", scribe);
@@ -158,7 +167,17 @@ public class BitbucketIdentityProvider implements OAuth2IdentityProvider {
     LOGGER.warn("Fail to retrieve the teams of Bitbucket user: {}", teamsResponse.getBody());
     return null;
   }
-
+  @CheckForNull
+  private GsonWorkspaces requestWorkspaces(OAuthService scribe, Token accessToken) {
+    OAuthRequest userRequest = new OAuthRequest(Verb.GET, settings.apiURL() + "2.0/workspaces?role=member", scribe);
+    scribe.signRequest(accessToken, userRequest);
+    Response workspacesResponse = userRequest.send();
+    if (workspacesResponse.isSuccessful()) {
+      return GsonWorkspaces.parse(workspacesResponse.getBody());
+    }
+    LOGGER.warn("Fail to retrieve the workspaces of Bitbucket user: {}", workspacesResponse.getBody());
+    return null;
+  }
   private ServiceBuilder newScribeBuilder(OAuth2IdentityProvider.OAuth2Context context) {
     if (!isEnabled()) {
       throw new IllegalStateException("Bitbucket authentication is disabled");

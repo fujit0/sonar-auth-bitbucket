@@ -40,6 +40,7 @@ public class BitbucketSettings {
   public static final String ENABLED = "sonar.auth.bitbucket.enabled";
   public static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.bitbucket.allowUsersToSignUp";
   public static final String TEAM_RESTRICTION = "sonar.auth.bitbucket.teams";
+  public static final String WORKSPACE_RESTRICTION = "sonar.auth.bitbucket.workspaces";
   public static final String API_URL = "sonar.auth.bitbucket.apiUrl";
   public static final String DEFAULT_API_URL = "https://api.bitbucket.org/";
 
@@ -79,6 +80,10 @@ public class BitbucketSettings {
 
   public String[] teamRestriction() {
     return config.getStringArray(TEAM_RESTRICTION);
+  }
+
+  public String[] workspaceRestriction() {
+    return config.getStringArray(WORKSPACE_RESTRICTION);
   }
 
   public String loginStrategy() {
@@ -140,6 +145,14 @@ public class BitbucketSettings {
       PropertyDefinition.builder(TEAM_RESTRICTION)
         .name("Teams")
         .description("Only members of at least one of these teams will be able to authenticate. Keep empty to disable team restriction.")
+        .category(CATEGORY)
+        .subCategory(SUBCATEGORY)
+        .multiValues(true)
+        .index(index++)
+        .build(),
+      PropertyDefinition.builder(WORKSPACE_RESTRICTION)
+        .name("Workspaces")
+        .description("Only members of at least one of these workspaces will be able to authenticate. Keep empty to disable workspace restriction.")
         .category(CATEGORY)
         .subCategory(SUBCATEGORY)
         .multiValues(true)
